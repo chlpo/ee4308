@@ -1,17 +1,8 @@
 <?xml version="1.0"?>
-<sdf version="1.6">
+<sdf version="1.8">
   <world name="default">
-
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
-
-    <include>
-      <uri>model://sun</uri>
-    </include>
-
     <scene>
-      <shadows>false</shadows>
+      <shadows>0</shadows>
     </scene>
 
     <gui fullscreen='0'>
@@ -37,11 +28,52 @@
         <constraints>
           <cfm>0.00001</cfm>
           <erp>0.2</erp>
-          <contact_max_correcting_vel>100.00000</contact_max_correcting_vel>
+          <contact_max_correcting_vel>2000.000000</contact_max_correcting_vel>
           <contact_surface_layer>0.01000</contact_surface_layer>
         </constraints>
       </ode>
     </physics>
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin
+      filename="gz-sim-imu-system"
+      name="gz::sim::systems::Imu">
+    </plugin>
+    <plugin
+      filename="gz-sim-air-pressure-system"
+      name="gz::sim::systems::AirPressure">
+    </plugin>
+    <plugin
+      filename="gz-sim-altimeter-system"
+      name="gz::sim::systems::Altimeter">
+    </plugin>
+    <plugin
+      filename="gz-sim-magnetometer-system"
+      name="gz::sim::systems::Magnetometer">
+    </plugin>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Ground Plane</uri>
+    </include>
+
+    <include>
+      <uri>https://fuel.gazebosim.org/1.0/OpenRobotics/models/Sun</uri>
+    </include>
 
     <model name="turtlebot3_house">
       <static>1</static>

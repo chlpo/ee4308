@@ -3,13 +3,19 @@ Lab 1: Designing a Nav2 Controller Plugin
 
 ***EE4308 Autonomous Robot Systems***
 
-**&copy; National University of Singapore**
+***AY25/26 Sem 2***
+
+**&copy; Lai Yan Kai, National University of Singapore**
 
 # Table of Contents
 
 [1&emsp;Administrative Matters](#1administrative-matters)
 
 [&emsp;1.1&emsp;Submittables](#11submittables)
+
+[&emsp;&emsp;1.1.1&emsp;Answers to L1 Questions](#111answers-to-l1-questions)
+
+[&emsp;&emsp;1.1.2&emsp;Zip file to L1](#112zip-file-to-l1)
 
 [2&emsp;Download and Build Files](#2download-and-build-files)
 
@@ -35,17 +41,71 @@ Take note of the deadline and install all relevant software before proceeding to
 | -- | -- |
 | **Effort** | Individual work. |
 | **Deadline** | W5 Fri, 23:59. | 
-| **Submission** | Submit a zip file to the L1 Assignment on Canvas. More details below. |
-| **Software** | ROS2 Humble on Ubuntu 22.04 LTS. If you are using Windows or Mac, please use the Oracle VirtualBox. The full installation process for Windows (no Mac insturctions), starting from VirtualBox installation, is available at https://github.com/LaiYanKai/Misc/blob/main/ee4308/1_install_vbox.md. |
+| **Submission** | Submit answers to **L1 Questions** on Canvas, and a zip file to **L1** on Canvas. More details below. |
+| **Software** | ROS2 Jazzy on Ubuntu 24.04 LTS. See installation instructions on https://github.com/LaiYanKai/Misc/blob/main/ee4308/01_Where_To_Install_Ubuntu.md. |
 | **Lab Computers**| If installation is not possible after trying, a lab computer can be loaned. Please email the TA / GA / Lecturer for a computer, based on instructions on Canvas. |
 
 ## 1.1&emsp;Submittables
 
-The submitted zip is named as `l1_<matric>.zip` where `<matric>` is your student number in **lowercase** (e.g. `l1_a0987654n.zip`). The zip should contain only the following four files:
-1. `ee4308/src/ee4308_bringup/params/proj1.yaml`,
-2. `ee4308/src/ee4308_turtle/include/ee4308_turtle/controller.cpp`, 
-3. `ee4308/src/ee4308_turtle/src/controller.hpp`
-4. `ee4308/docs/lab1_answers.md`
+### 1.1.1&emsp;Answers to L1 Questions
+Submit the answers for the three questions from [6 Questions](#6questions) on the Canvas Quiz.
+
+### 1.1.2&emsp;Zip file to L1
+Submit a zip file containing the code to Canvas Quiz. To avoid penalties, 
+1. Named the zip as `l1_<matric>.zip` where `<matric>` is your student number in **lowercase** (e.g. `l1_a0987654n.zip`). 
+2. Rename the workspace folder to `l1_<matric>`.
+3. Ensure that the zip file have the following structure. Do not zip other files or directories.
+
+<table><tbody><tr><td>
+    <details open>
+        <summary><code>l1_a0987654n.zip</code>&emsp;The zip file.</summary>
+        <dl>
+            <dd><details open>
+                <summary><code>l1_a0987654n/</code>&emsp;The renamed workspace directory.</summary>
+                <dl>
+                    <dd><details open> 
+                        <summary><code>src/</code>&emsp;Contains packages.</summary>
+                        <dl>
+                            <dd><details open>
+                                <summary><code>ee4308_bringup/</code>&emsp;Package containing scripts that start the projects.</summary>
+                                <dl>
+                                    <dd><details open>
+                                        <summary><code>params/</code></summary>
+                                        <dl>
+                                            <dd><code>proj1.yaml</code>&emsp;Contains adjustable parameter values.</dd>
+                                        </dl>
+                                    </details></dd>
+                                </dl>
+                            </details></dd>
+                            <dd><details open>
+                                <summary><code>ee4308_turtle/</code>&emsp;Package implementing the turtlebot's controller</summary>
+                                <dl>
+                                    <dd><details open>
+                                        <summary><code>include/</code>&emsp;Directory for <code>.hpp</code> header files.</summary>
+                                        <dl>
+                                            <dd><details open>
+                                                <summary><code>ee4308_turtle/</code></summary>
+                                                <dl>
+                                                    <dd><code>controller.hpp</code>&emsp;Contains code declarations for the controller.</dd>
+                                                </dl>
+                                            </details></dd>
+                                        </dl>
+                                    </details></dd>
+                                    <dd><details open>
+                                        <summary><code>src/</code>&emsp;Directory for <code>.cpp</code> files.</summary>
+                                        <dl>
+                                            <dd><code>controller.cpp</code>&emsp;Contains code definitions for the controller. To complete <code>computeVelocityCommands()</code>.</dd>
+                                        </dl>
+                                    </details></dd>
+                                </dl>
+                            </details></dd>
+                        </dl>
+                    </details></dd>
+                </dl>
+            </details></dd>
+        </dl>
+    </details>
+</td></tr></tbody></table>
 
 # 2&emsp;Download and Build Files 
 
@@ -54,19 +114,18 @@ The submitted zip is named as `l1_<matric>.zip` where `<matric>` is your student
 2. On the terminal, clone the GitHub repository:
     ```bash
     cd ~
-    git clone -b proj1 https://github.com/LaiYanKai/ee4308
+    git clone -b 2520-proj1 https://github.com/LaiYanKai/ee4308
     ```
 
 3. Let the `ee4308` folder be known as the **workspace** folder. Navigate into the workspace folder, and build the files.
    ```bash
-   cd ~/ee4308
    colcon build --symlink-install
    ```
     Wait for about a minute.
 
 # 3&emsp;Simulating SLAM with Cartographer
 In this section, we map a simulated environment to obtain its map. 
-This section assumes that the installation guides were followed, such that `~/.bashrc` has sourced the ROS installation, and `TURTLEBOT3_MODEL` has been set.
+<!-- This section assumes that the installation guides were followed, such that `~/.bashrc` has sourced the ROS installation, and `TURTLEBOT3_MODEL` has been set. -->
 
 1. In Ubuntu, open a terminal with `Ctrl+Alt+T`, or use an existing terminal. Let this be **terminal A**. 
    
@@ -76,21 +135,32 @@ This section assumes that the installation guides were followed, such that `~/.b
     ```
     This command only needs to be **run once** for every terminal until it is closed.
 
-3. Launch the SLAM simulation with:
-    ```bash
-    ros2 launch ee4308_bringup proj1_sim_slam.launch.py
-    ```
-    If this is the first time loading the simulation with the `turtlebot3_house.world`, it will take a few minutes for Gazebo to load, during which a black screen will be shown.
+3. Launch the SLAM simulation.
+    - If using VirtualBox,
+        ```bash
+        ros2 launch ee4308_bringup proj1_sim_slam.launch.py libgl:=True
+        ```
+    - If dual booted and using Ubuntu natively,
+        ```bash
+        ros2 launch ee4308_bringup proj1_sim_slam.launch.py
+        ```
+4. **Do this step only if you have problems starting the simulation**. If the simulation takes more than about 10 seconds to load and the robot does not spawn, stop the simulation by:
+    1. Sending `Ctrl+C` in terminal A. 
+    2. The following may then be run to cleanly remove all running Gazebo instances:
+        ```bash
+        pkill -9 ruby
+        ```
 
-4. After launching, RViz and Gazebo will open. The initial view in RViz is rotated $90^\circ$ clockwise from the Gazebo's view. The robot is initially pointing to the right in RViz, and to the top in Gazebo.
+5. After launching, RViz and Gazebo will open. 
+The robot is initially pointing to the right in RViz, and to the top in Gazebo.
 
     ![image](img/proj1_sim_slam.png)
 
-5. Open a new terminal (call it **terminal B**), either by `Ctrl+Alt+T` or organizing the terminals by `Ctrl+Shift+O` in terminal A.
+6. Open a new terminal (call it **terminal B**), either by `Ctrl+Alt+T` or organizing the terminals by `Ctrl+Shift+O` in terminal A.
 
-6. In terminal B, start tele-operation with:
+7. In terminal B, start tele-operation with:
     ```bash
-    ros2 run turtlebot3_teleop teleop_keyboard
+    TURTLEBOT3_MODEL=burger ros2 run turtlebot3_teleop teleop_keyboard
     ```
 
 7. Begin moving the robot around the map using tele-operation while using SLAM to contruct the occupancy grid in RViz. Take about 10 minutes to map the whole area. The following tips will be useful:
@@ -109,13 +179,9 @@ This section assumes that the installation guides were followed, such that `~/.b
   
 8. After the entire area is mapped, stop the teleopration in terminal B with `Ctrl+C`. **Do not stop terminal A**, or else the entire mapping process has to be repeated.
    
-9. In terminal B, save the map into the `ee4308_bringup` package:
+9. In terminal B, save the map into the `ee4308_bringup` package. Then, build the workspace to install the map, so that the map can be found later by the executables:
     ```bash
-    ros2 run nav2_map_server map_saver_cli -f ~/ee4308/src/ee4308_bringup/maps/my_map_sim
-    ```
-    
-10. In terminal B, install the saved map for subsequent sections by building the workspace:
-    ```bash
+    ros2 run nav2_map_server map_saver_cli -f ~/ee4308/src/ee4308_bringup/maps/proj1_sim
     cd ~/ee4308
     colcon build --symlink-install
     ```
@@ -123,7 +189,7 @@ This section assumes that the installation guides were followed, such that `~/.b
 11. After the build completes, `Ctrl+C` terminal A to stop the SLAM operation.
     
 # 4&emsp;Simulating Navigation with Nav2
-In this section, the map created from SLAM is used for navigation by the ROS2 Nav2 software. This section assumes that the installation guides were followed, such that `~/.bashrc` has sourced the ROS installation, the `TURTLEBOT3_MODEL` has been set, and `RMW_IMPLEMENTATION` is set to the Cyclone DDS.
+In this section, the map created from SLAM is used for navigation by the ROS2 Nav2 software. This section assumes that the installation guides were followed.
 
 1. In Ubuntu, on a new or existing terminal, source the workspace's installation folders if not already:
     ```bash
@@ -132,10 +198,18 @@ In this section, the map created from SLAM is used for navigation by the ROS2 Na
     ```
 
 2. Launch the navigation with:
-    ```bash
-    ros2 launch ee4308_bringup proj1_sim.launch.py gz_client:=true
-    ```
-    The Gazebo graphic interface does not need to be launched for the simulation to work. For the subsequent sections, you may leave out `gz_client:=true` to free up computational resources as the robot always starts at the same pose.
+    - If using VirtualBox,
+        ```bash
+        ros2 launch ee4308_bringup proj1_sim.launch.py libgl:=True
+        ```
+    - If dual booted and using Ubuntu natively,
+        ```bash
+        ros2 launch ee4308_bringup proj1_sim.launch.py
+        ```
+    
+    The Gazebo graphic interface does not need to be launched for the simulation to work. To do so, you may *append* the command above with `headless:=true` to free up computational resources.
+
+3. **If there are problems starting the simulation**, `Ctrl+C` the terminal and run `pkill -9 ruby` to stop Gazebo, like the previous session.
 
 3. Observe the starting pose (position and rotation) of the robot in Gazebo, and find the corresponding position in RViz. Both views are now pointing in the same direction, which is different from the SLAM section. 
 
@@ -163,7 +237,7 @@ In this section, the map created from SLAM is used for navigation by the ROS2 Na
 # 5&emsp;Pure Pursuit 
 In this lab, implement a simple pure pursuit controller as part of a Nav2 controller plugin.
 
-Pure pursuit finds the **lookahead point** along a path that is at least a lookahead-distance away from the **robot**.
+Pure pursuit finds the **lookahead point** along a path that is at least a lookahead-distance away from the closest point.
 
 ![lookahead](img/lookahead.png)
 
@@ -194,11 +268,12 @@ The task is to program a simple pure-pursuit controller with velocity constraint
 The function is a custom override of the Nav2 controller plugin.
 Pseudocode is provided at the bottom of this section.
 
-The following input variables are accessible by the function and *must* be used. Some are ROS2 parameters that can be tuned from the parameter file, except for **fixed** parameters that must not be adjusted.
+The following input variables are accessible by the function and *must* be used. Some are ROS2 parameters that can be tuned from the parameter file `proj1.yaml`.
 | Input Variable | Type | Parameter | Description |
 | --- | --- | --- | --- |
-| `pose` | `geometry_msgs::msg::PoseStamped` | No | Robot's current pose in world frame. |
-| `global_plan_` | `nav_msgs::msg::PoseStamped` | No | Contains the poses of the points along the global path, between a start pose (robot's position) and a goal pose. |
+| `rbt_pose` | `geometry_msgs::msg::PoseStamped` | No | Robot's current pose in world frame. |
+| `goal_pose` | `geometry_msgs::msg::PoseStamped` | No | Goal's current pose in world frame. |
+| `global_plan_` | `nav_msgs::msg::Path` | No | Contains the poses of the points along the global path, between a start pose (robot's position) and a goal pose. The poses are contained in the `poses` property. |
 | `desired_linear_vel_` | `double` | Yes | To be tuned. The desired linear velocity in pure pursuit. |
 | `desired_lookahead_dist_` | `double` | Yes | To be tuned. The desired lookahead distance in pure pursuit. |
 | `max_angular_vel_` | `double` | Yes | Fixed at `1.0` rad/s. The maximum angular velocity allowed on the robot. |
@@ -233,25 +308,28 @@ You may refer to [tips.md](tips.md) for programming tips and useful functions.
 ## 5.3&emsp;Building and Testing
 To test any modification made to the source and header files, the workspace has to be built, and the simulation has to be run.
 
-1. Build the workspace
+1. Build the workspace and source it.
     ```bash
     cd ~/ee4308
     colcon build --symlink-install
+    source install/setup.bash
     ```
 2. Test to see if the controller is working by running the following commands from Section 4. 
-    ```bash
-    source install/setup.bash
-    ros2 launch ee4308_bringup proj1_sim.launch.py
-    ```
+    - If using VirtualBox,
+        ```bash
+        ros2 launch ee4308_bringup proj1_sim_slam.launch.py libgl:=True
+        ```
+    - If dual booted and using Ubuntu natively,
+        ```bash
+        ros2 launch ee4308_bringup proj1_sim_slam.launch.py
+        ```
     Remember to estimate the initial robot position. Place the goal pose such that the straight line path does not intersect any obstacle. 
 
 3. Assuming no logical errors, the code is complete once the robot is able to follow the points along the straight-line path to the goal.
 
 
 # 6&emsp;Questions
-In `ee4308/docs/lab1_answers.md`, answer the following questions. What are problem(s) that could occur, when...
-1. The lookahead distance is too large?
-2. The lookahead distance is too small?
-3. The linear velocity is too large?
-4. The lookahead point is to the left or right of the robot, such that $x' \approx 0$?
-5. The lookahead point is behind the robot, such that $x' < 0$?
+On Canvas **L1 Questions** Quiz, answer the following questions. What are problem(s) that could occur, when...
+1. The lookahead distance is too large or small?
+2. The desired linear velocity is too large, especially if the lookahead point is to the side of the robot, such that $y' < 0$?
+3. The lookahead point is behind the robot, such that $x' < 0$? You may need to examine some formulas to answer this question.

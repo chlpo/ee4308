@@ -3,7 +3,9 @@ Project 1: Designing Nav2 Controller and Planner Plugins
 
 ***EE4308 Autonomous Robot Systems***
 
-**&copy; National University of Singapore**
+***AY25/26 Sem 2***
+
+**&copy; Lai Yan Kai, National University of Singapore**
 
 # Table of Contents
 [1&emsp;Administrative Matters](#1administrative-matters)
@@ -14,15 +16,31 @@ Project 1: Designing Nav2 Controller and Planner Plugins
 
 [2&emsp;Regulated Pure Pursuit](#2regulated-pure-pursuit)
 
-[&emsp;2.1&emsp;Relevant Files for Controller](#21relevant-files-for-controller)
+[2.1&emsp;Implementation](#21implementation)
 
-[&emsp;2.2&emsp;Implement `computeVelocityCommands()`](#22implement-computevelocitycommands)
+[2.1.1&emsp;Implement `computeVelocityCommands()`](#211implement-computevelocitycommands)
 
 [3&emsp;A* Path Planning and Savitsky-Golay Smoothing](#3a-path-planning-and-savitsky-golay-smoothing)
 
-[&emsp;3.1&emsp;Relevant Files for Planner](#31relevant-files-for-planner)
+[&emsp;3.1&emsp;Background](#31background)
 
-[&emsp;3.2&emsp;Implement `createPlan()`](#32implement-createplan)
+[&emsp;&emsp;3.1.1&emsp;Savitsky-Golay Smoothing](#311savitsky-golay-smoothing)
+
+[&emsp;&emsp;3.1.2&emsp;Costmap](#312costmap)
+
+[&emsp;&emsp;3.1.3&emsp;Inflation Radius and Circumscribed Radius](#313inflation-radius-and-circumscribed-radius)
+
+[&emsp;3.2&emsp;Implementation](#32implementation)
+
+[&emsp;&emsp;3.2.1&emsp;`XYToCR_()`](#321xytocr_)
+
+[&emsp;&emsp;3.2.2&emsp;`CRToXY_()`](#322crtoxy_)
+
+[&emsp;&emsp;3.2.3&emsp;`CRToIndex_()`](#323crtoindex_)
+
+[&emsp;&emsp;3.2.4&emsp;`outOfMap_()`](#324outofmap_)
+
+[&emsp;&emsp;3.2.5&emsp;Implement `createPlan()`](#325implement-createplan)
 
 [4&emsp;Physical Experiments](#4physical-experiments)
 
@@ -57,7 +75,7 @@ Take note of the deadline and install all relevant software before proceeding to
 | **Signup Presentation Slots** | On Canvas People, P1P. |
 | **Signup Lab Slots** | On Canvas People, P1 Lab. |
 | **Deadline** | W7 Mon, 23:59. | 
-| **Submission** | Submit a zip file, recorded presentation and demonstration video, and a report to the P1 Assignment on Canvas. More details below. |
+| **Submission** | Submit a zip file, recorded demonstration video, and a report to the P1 Assignment on Canvas. More details below. |
 | **Software** | Refer to Lab 1. |
 | **Lab Computers**| Refer to Lab 1. |
 
@@ -66,16 +84,17 @@ For all filenames, label as `p1_team##` (**lowercase**), where `##` is the doubl
 
 | Component | Description |
 | --- | --- |
-| P1C | Zip the `ee4308/src` folder into `p1_team##.zip`. A well-programmed code is highly readable. Highly readable code consist of judicious comments, proper indentation, appropriately named variables, and minimal code. There is deliberate thought in considering the effects of every piece of code, such that possible bugs are prevented, and a balance between readability and optimization is achieved. |
-| P1R | A report `p1_team##.pdf`. **Do not include your names in the report, only the matric numbers**. About 10 to 15 pages excluding front-matter and back-matter. In a good report, the existing algorithms are examined in detail and simple solutions are proposed to significantly improve the algorithms. Deliberate comparisons are made to compare solutions, and advice is given based on realistic situations. Experiments and methodologies to tune parameters are well designed and justified. The narrative is concise and clear. Any figures, tables and references are labelled. There is a title page and content page, and the report is tidy and well organized.  |
-| P1P | A recorded presentation and demonstration `p1_team##.mp4`. 6-min of presentation with slides, and max 3-min of a physical robot demonstration with screen recording (normal speed, see https://youtu.be/m7npzdYp6Ok ). About 7-min of Q&A will be conducted after the combined video is played back during the presentation slot. In a good presentation, the narrative is based primarily on the solutions and analyses. A detailed understanding of the concepts and related nuances are demonstrated with concise explanations. Summaries and diagrams are used for comparisons and advice.|
+| P1C | Zip the `ee4308/src` folder into `p1_team##.zip`. The component is benchmarked in simulation (make sure the tuned parameters can perform adequately in simulation). Marks are given depending on the demonstration video, how well the robot can navigate tight corners and narrow corridors, and the quality of improvements. The robot should move efficiently; neither too fast nor slow. |
+| P1R | A report `p1_team##.pdf`. **Do not include your names in the report, only the matric numbers**. About 10 to 15 pages (no hard limit) excluding front-matter and back-matter. In a good report, the existing algorithms are examined in detail and simple solutions are proposed to significantly improve the algorithms. Deliberate comparisons are made to compare solutions, and suggestions are given based on realistic situations. Experiments and methodologies to tune parameters are well designed and justified. The narrative is concise and clear. Any figures, tables and references are labelled. There is a title page and content page, and the report is tidy and well organized. **Please include a page on each member's contribution**. |
+| P1P | A demonstration video `p1_team##.mp4` showing a physical run in the lab's obstacle course. Questions will be asked based on each member's contribution. |
 
 ## 1.2&emsp;Robot Loaning and Testing
 After programming and testing in simulation, the code has to be tested on a physical robot. Every team will be able to loan a robotic kit to test on a playing field in the lab. Three waypoints will be provided that the robot has to move to, and the physical run has to be filmed for the demonstration video.
 
 Once the program is working in simulation,
-1. Fill up the **Robot Kit Loan Form** on Canvas, and submit back to Canvas. The loan form must contain signatures (not initials), and the team will be liable for any loss of equipment. After submitting, email the TA / GA for loaning. The robot kit can be brought home, and must be returned at most one week after the presentation slot.
-2. Select lab slots on Canvas People (P1 Lab) to book a lab session. First come first served.
+1. Email the TA / GA for loaning the robotic kit on behalf of your team.
+2. Select slots on Canvas People (P1 Lab) to book a lab session. First come first served. 
+3. The robotic kit can be brought home. Return the robotic kit before the presentation.
 
 # 2&emsp;Regulated Pure Pursuit
 
@@ -85,12 +104,12 @@ Regulated pure pursuit is implemented on top of pure pursuit with the following 
 
 ![rpp_heu](img/rpp_heu.png)
 
-$c_h$, $d_{prox}$ and $g_l$ are the curvature threshold, proximity threshold, and lookahead gain respectively, and are user-defined constants. $v'$ is the desired linear velocity, $d_o$ is the distance to the closest obstacle, and $L_h$ is the adjusted lookahead distance.
+$c_h$, $d_{prox}$ and $g_l$ are the curvature threshold, proximity threshold, and lookahead gain respectively, and are user-defined constants. $v'$ is the linear velocity from the previous time-step, $d_o$ is the distance to the closest obstacle, and $L_h$ is the adjusted lookahead distance.
 
-## 2.1&emsp;Relevant Files for Controller
-Same as lab 1. `controller.cpp`, `controller.hpp`, and `proj1.yaml`.
+## 2.1&emsp;Implementation
+Filse are the same as lab 1. `controller.cpp`, `controller.hpp`, and `proj1.yaml`.
 
-## 2.2&emsp;Implement `computeVelocityCommands()`
+### 2.1.1&emsp;Implement `computeVelocityCommands()`
 The input and returned variables are almost the same as Lab 1. The additional requirements include (i) regulated pure pursuit and (ii) rotating to the user-defined goal orientation.
 
 An *additional* input variable is:
@@ -128,10 +147,11 @@ A subscriber to the laser scan topic is required to implement the obstacle heuri
 
 
 # 3&emsp;A* Path Planning and Savitsky-Golay Smoothing
-A* Visualization at https://planners-js.vercel.app/ (Docs for the visualization at https://planners-js-docs.vercel.app/UserGuide.html#quick-start ). 
-
 Implement A* in the Nav2 planner plugin to find a path around obstacles, and implement the Savitsky-Golay smoother. You may choose to improve A* by introducing post-processing or converting to multi-cost Theta*. The pseudocode for A* is provided in a later section.
 
+# 3.1&emsp;Background
+
+# 3.1.1&emsp;Savitsky-Golay Smoothing
 Savitsky-Golay smoothing is done by fitting a polynomial curve over a moving window of regularly-spaced points of a path.
 The points generated by A* can be considered regularly-spaced, while interpolation is necessary for Theta* to ensure regular spacing.
 
@@ -154,10 +174,229 @@ The $i$-th smoothed point $\hat{x}_i$ is calculated as follows:
 
 ![sg_smooth](img/sg_smooth.png)
 
-## 3.1&emsp;Relevant Files for Planner
+# 3.1.2&emsp;Costmap
+
+The costmap contains different costs in each cell. The costs are between 0 to 99. The path planner will use these costs to plan a path, and will attempt to avoid cells with large costs.
+
+The following image describes the costmap at zero rotation from the world axis and in ROS2's convention.
+
+![](img/plan_costmap.png)
+
+The following image describes how the map cells are flattened using row-major order so that the map can be stored as a Python list or C++ vector.
+
+![](img/plan_costmap_index.png)
+
+
+## 3.1.3&emsp;Inflation Radius and Circumscribed Radius
+
+The inflation radius and circumscribed radius are radii that determine how close the robot is able to get to an obstacle.
+
+The **inflation radius** determines the distance from obstacles where the costs begin to increase. 
+It is usually larger than the robot's radius.
+
+The **circumscribed radius** is the smallest radius of the robot. If a path is plotted on cells that are this distance from an obstacle, a collision will occur.
+
+![](img/plan_radii.png)
+
+The radii are used to inflate (increase) the costs of the map cells that are close to obstacles, penalizing any paths that are near the obstacles.
+
+![](img/plan_inflate.png)
+
+# 3.2&emsp;Implementation
 From the same packages as lab 1, the `planner.cpp`, `planner.hpp`, and `proj1.yaml` files.
 
-## 3.2&emsp;Implement `createPlan()`
+
+These functions makes it easier to interface with the costmap. Implement every function so that it can be used from the main path planning function `dijkstra_()`.
+
+## 3.2.1&emsp;`XYToCR_()`
+
+<table><tbody>
+    <tr>
+        <td><b>Description</b></td>
+        <td colspan="2">Converts world coordinates (x,y) to map coordinates (c,r). The world coordinates are floating numbers, and the map coordinates are integers.</th>
+    </tr>
+    <tr>
+        <td rowspan="2"><b>Arguments</b></td>
+        <td><code>x</code></td>
+        <td>The world coordinate x.</td>
+    </tr>
+    <tr>
+        <td><code>y</code></td>
+        <td>The world coordinate y.</td>
+    </tr>
+    <tr>
+        <td><b>Returns</b></td>
+        <td colspan="2">The map coordinates (c,r).</td>
+    </tr>
+</tbody></table>
+
+The following functions may be useful, although some may not be eventually used.
+
+<table><tbody>
+    <tr>
+        <th>Variable / Function</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>costmap_->getOriginX()</code></td>
+        <td>Function</td>
+        <td>Returns the x world coordinate (m) at the bottom-left corner of the map.</td>
+    </tr>
+    <tr>
+        <td><code>costmap_->getOriginY()</code></td>
+        <td>Function</td>
+        <td>Returns the y world coordinate (m) at the bottom-left corner of the map.</td>
+    </tr>
+    <tr>
+        <td><code>costmap_->getResolution()</code></td>
+        <td>Function</td>
+        <td>The length of each cell (m) in the world.</td>
+    </tr>
+    <tr>
+        <td><code>std::ceil()</code></td>
+        <td>Function</td>
+        <td>Finds the ceiling of a number.</td>
+    </tr>
+    <tr>
+        <td><code>std::floor()</code></td>
+        <td>Function</td>
+        <td>Floors a number.</td>
+    </tr>
+</tbody></table>
+
+## 3.2.2&emsp;`CRToXY_()`
+
+<table><tbody>
+    <tr>
+        <td><b>Description</b></td>
+        <td colspan="2">Converts map coordinates (c,r) to map coordinates (x,y). The world coordinates should be at the center of the cell at (c,r).</th>
+    </tr>
+    <tr>
+        <td rowspan="2"><b>Arguments</b></td>
+        <td><code>c</code></td>
+        <td>The map coordinate which corresponds to the column of the cell.</td>
+    </tr>
+    <tr>
+        <td><code>r</code></td>
+        <td>The map coordinate which corresponds to the row of the cell.</td>
+    </tr>
+    <tr>
+        <td><b>Returns</b></td>
+        <td colspan="2">The world coordinates (x,y), which is at the center of the cell.</td>
+    </tr>
+</tbody></table>
+
+The following functions may be useful.
+
+<table><tbody>
+    <tr>
+        <th>Variable / Function</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>costmap_->getOriginX()</code></td>
+        <td>Class property</td>
+        <td>The x world coordinate (m) at the bottom-left corner of the map.</td>
+    </tr>
+    <tr>
+        <td><code>costmap_->getOriginY()</code></td>
+        <td>Class property</td>
+        <td>The y world coordinate (m) at the bottom-left corner of the map.</td>
+    </tr>
+    <tr>
+        <td><code>costmap_->getResolution()</code></td>
+        <td>Class property</td>
+        <td>The length of each cell (m) in the world.</td>
+    </tr>
+</tbody></table>
+
+## 3.2.3&emsp;`CRToIndex_()`
+
+<table><tbody>
+    <tr>
+        <td><b>Description</b></td>
+        <td colspan="2">Converts map coordinates (c,r) to the corresponding flattened index. The index is used to access the C++ vector or Python list that stores the costmap.</th>
+    </tr>
+    <tr>
+        <td rowspan="2"><b>Arguments</b></td>
+        <td><code>c</code></td>
+        <td>The map coordinate which corresponds to the column of the cell.</td>
+    </tr>
+    <tr>
+        <td><code>r</code></td>
+        <td>The map coordinate which corresponds to the row of the cell.</td>
+    </tr>
+    <tr>
+        <td><b>Returns</b></td>
+        <td colspan="2">The flattened index.</td>
+    </tr>
+</tbody></table>
+
+The following functions may be useful.
+
+<table><tbody>
+    <tr>
+        <th>Variable / Function</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>costmap_->getSizeInCellsX()</code></td>
+        <td>Class property</td>
+        <td>The number of cell columns in the map before flattening.</td>
+    </tr>
+    <tr>
+        <td><code>costmap_->getSizeInCellsY()</code></td>
+        <td>Class property</td>
+        <td>The number of cell rows in the map before flattening.</td>
+    </tr>
+</tbody></table>
+
+## 3.2.4&emsp;`outOfMap_()`
+
+<table><tbody>
+    <tr>
+        <td><b>Description</b></td>
+        <td colspan="2">Determines if the map coordinate (c,r) is represented by the map, returning a logical false if so.</th>
+    </tr>
+    <tr>
+        <td rowspan="2"><b>Arguments</b></td>
+        <td><code>c</code></td>
+        <td>The map coordinate which corresponds to the column of the cell.</td>
+    </tr>
+    <tr>
+        <td><code>r</code></td>
+        <td>The map coordinate which corresponds to the row of the cell.</td>
+    </tr>
+    <tr>
+        <td><b>Returns</b></td>
+        <td colspan="2">Logical true if (c,r) is not in the map. Logical false if (c,r) is in the map.</td>
+    </tr>
+</tbody></table>
+
+The following class properties and functions may be useful.
+
+<table><tbody>
+    <tr>
+        <th>Variable / Function</th>
+        <th>Type</th>
+        <th>Description</th>
+    </tr>
+    <tr>
+        <td><code>costmap_->getSizeInCellsX()</code></td>
+        <td>Class property</td>
+        <td>The number of cell columns in the map before flattening.</td>
+    </tr>
+    <tr>
+        <td><code>costmap_->getSizeInCellsY()</code></td>
+        <td>Class property</td>
+        <td>The number of cell rows in the map before flattening.</td>
+    </tr>
+</tbody></table>
+
+## 3.2.5&emsp;Implement `createPlan()`
 Implement A* within `createPlan()`.
 
 The following input variables are accessible by the function and *must* be used. 
@@ -193,7 +432,7 @@ The *minimal* pseudocode is:
 12. &emsp;&emsp;**End If**
 13. &emsp;&emsp;Mark $n$ as expanded.
 14. &emsp;&emsp;**For** each accessible neighbor node $m$ of $n$ **Do**
-15. &emsp;&emsp;&emsp; $\tilde{g}$ &larr; $g$-cost of $n$ $+$ (physical distance between $n$ and $m$) $\times$ (map cost at $m$ + 1)
+15. &emsp;&emsp;&emsp; $\tilde{g}$ &larr; $g$-cost of $n$ $+$ (physical distance between $n$ and $m$) $\times$ (map cost at $m$)
 16. &emsp;&emsp;&emsp;**If** $\tilde{g} <$ $g$-cost of $m$ **Then**
 17. &emsp;&emsp;&emsp;&emsp; $g$-cost of $m$ &larr; $\tilde{g}$
 18. &emsp;&emsp;&emsp;&emsp;parent of $m$ &larr; $n$
@@ -208,36 +447,31 @@ You may refer to [tips.md](tips.md) for programming tips and useful functions.
 
 # 4&emsp;Physical Experiments
 Proceed with the hardware testing only when all the programming tasks are completed and tested to work in simulation, as there are limited lab slots available.
-The robot kit has to be loaned (See []Section 1.2(#12robot-loaning-and-testing)).
+The robot kit has to be loaned (See [Section 1.2](#12robot-loaning-and-testing)).
 
 ## 4.1&emsp;Playing Field Demonstration
 Teams are to map a physical playing field in lab using SLAM, and navigate to three waypoints using the custom planner and controller Nav2 plugins. 
-A recorded video  (fast-forwarded to $2\times$ speed) of a successful run is to be played-back immediately after the presentation.
+A recorded video of a successful run must be submitted. The video will be played-back during the presentation.
 
-The details of the playing field will be released by Week 5, as the lab will open in Weeks 5, 6, and recess week. The playing field is approximately $5\times 5$ m and has narrow corridors that are about 40cm wide.
+The details of the playing field will be released by Week 4, as the lab will open between Week 4 and the recess week. The playing field is approximately $5\times 5$ m and has narrow corridors that are about 40cm wide.
 
 ## 4.2&emsp; Turning on the Turtlebot for the First Time 
-1. On the Turtlebot, connect to a monitor via a HDMI cable. 
+1. On the Turtlebot, connect to a monitor via a micro-HDMI cable, and a keyboard via the USB ports.
 
     ![tbot_hdmi](img/tbot_hdmi.png)
 
-2. Connect a keyboard to the Turtlebot.
 
-    ![tbot_keyboard](img/tbot_keyboard.png)
-
-3. Connect the battery or the DC jack to the Turtlebot to power the robot.
-
+2. Connect the adapter to the DC jack...
+    ![tbot_batt](img/tbot_jack.png)
+    ...or connect the battery plugs to power the robot.
     ![tbot_batt](img/tbot_batt.png)
     
-    ![tbot_batt](img/tbot_jack.png)
 
-4. Turn on the robot by flipping the switch on the Turtlebot.
+3. Turn on the robot by flipping the switch on the Turtlebot.
 
-5. If successful, there should be a brief rainbow screen on the monitor and subsequently many lines of output. 
-    The boot may fail occasionally, such that the rainbow screen is not shown. 
-    Simply flip the switch on the Turtlebot twice to power off and on again.
+4. If successful, there should be many lines of output on the monitor. If not successful, check the power connection and the monitor, flipping the switch only as a last resort.
 
-6. Log in to the Turtlebot with the given **username** and **password**. 
+5. Log in to the Turtlebot with the given **username** and **password**. 
 
 ## 4.3&emsp;Change `ROS_DOMAIN_ID` on Turtlebot and Remote PC
 This section only needs to be done once.
@@ -342,9 +576,9 @@ This section assumes both the Turtlebot and Remote PC are connected to the same 
 
 2. Connect to the Turtlebot by running
     ```bash
-    ssh ubuntu@<TURTLE_IP>
+    ssh robot@<TURTLE_IP>
     ```
-    where `<TURTLE_IP>` is the Turtlebot's IP address.
+    where `<TURTLE_IP>` is the Turtlebot's IP address. For example, `ssh robot@192.168.219.209`.
 
 3. This enables access to the Turtlebot without connecting the keyboard and monitor. The caveat however is that the Turtlebot's IP address has to be known, and that the Turtlebot is connected to the Wi-Fi. 
 
@@ -359,7 +593,7 @@ The Turtlebot bringup starts up the sensors, publishes sensor data into ROS2, an
 
 3. Place the robot on a flat surface.
 
-4. On the **Turtlebot SSH terminal**, run the command to begin sensor calibration and bringup the robot. Do not touch or shake the robot until the `Run!` word is shown, as the Gyro sensor is calibrating.
+4. On the **Turtlebot SSH terminal**, run the following command to bring up the sensors and motors on the robot. Do not touch or shake the robot until the `Run!` word is shown, as the Gyro sensor is calibrating.
     ```bash
     ros2 launch turtlebot3_bringup robot_c1.launch.py
     ```
@@ -377,30 +611,25 @@ and if using VirtualBox, the network adapter is the bridged adapter ([Section 4.
 
 3. Ensure that the Turtlebot bringup is running via SSH ([Section 4.7](#47running-the-turtlebot-bringup)).
 
-4. On a **Remote PC terminal**, go to the workspace and launch the following:
+4. On a **Remote PC terminal**, go to the workspace and launch the following.
     ```bash
     cd ~/ee4308
     source install/setup.bash
     ros2 launch ee4308_bringup proj1_slam.launch.py
     ```
 
-5. On another **Remote PC terminal**, run the teleoperation:
+5. On another **Remote PC terminal**, run the teleoperation.
     ```bash
-    ros2 run turtlebot3_teleop teleop_keyboard
+    TURTLEBOT3_MODEL=burger ros2 run turtlebot3_teleop teleop_keyboard
     ```
 
 6. Begin mapping the area like in the simulations.
 
 7. Once the area is mapped, interrupt the remote PC terminal running the teleoperation with `Ctrl+C`.
 
-8. In the same terminal, save the map with:
+8. In the same terminal, save and install the map.
     ```bash
-    ros2 run nav2_map_server map_saver_cli -f ~/ee4308/src/ee4308_bringup/maps/my_map
-    ```
-
-9. After the map is saved, install the map by building the workspace:
-    ```bash
-    cd ~/ee4308
+    ros2 run nav2_map_server map_saver_cli -f ~/ee4308/src/ee4308_bringup/maps/proj1
     colcon build --symlink-install
     ```
 
@@ -433,12 +662,12 @@ If the code can work well in simulation, it will work well with hardware.
 If your program is too slow or troubleshooting is required, refer to [tips.md](tips.md) for some tips.
 
 ## 4.10&emsp;Turn off Turtlebot
-1. Run the following on the Turtlebot SSH terminal or on the Turtlebot to turn off the robot:
+1. Run the following on the Turtlebot SSH terminal or on the Turtlebot to turn off the robot's computer (Raspberry Pi):
     ```bash
     sudo shutdown now
     ```
-    If running from the SSH terminal, the connection will close.
+    If running from the SSH terminal, the connection will close. Alternatively, the small white button beside the Raspberry Pi's LED can be used to turn off the robot.
 
-2. Wait for a few seconds until the lights on the Raspberry Pi stops blinking.
+2. Wait for a few seconds until the LED light on the Raspberry Pi stops blinking and turns red.
 
-3. Flip the switch on the Turtlebot to turn off.
+3. Flip the switch on the Turtlebot's OpenCR board to turn off.

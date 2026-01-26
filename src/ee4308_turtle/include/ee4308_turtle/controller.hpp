@@ -8,8 +8,9 @@
 #include "pluginlib/class_list_macros.hpp"
 #include "nav2_core/controller.hpp"
 #include "tf2/utils.h"
+#include "tf2/LinearMath/Quaternion.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
-#include "ee4308_core/core.hpp"
+#include "ee4308_turtle/core.hpp"
 
 #pragma once
 
@@ -52,11 +53,11 @@ namespace ee4308::turtle
 
         // topics 
         nav_msgs::msg::Path global_plan_;
-        std::vector<float> scan_ranges_;
-        // rclcpp::Subscription<some msg type>::SharedPtr sub_scan_;
-        // void some callback(some msg type::SharedPtr msg);
+        // std::vector<float> scan_ranges_;
+        // rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr sub_scan_;
+        // void callbackSubScan_(sensor_msgs::msg::LaserScan::SharedPtr msg);
 
-        // other "private" functions
+        // other "protected" functions
         geometry_msgs::msg::TwistStamped writeCmdVel(double linear_vel, double angular_vel);
     };
 

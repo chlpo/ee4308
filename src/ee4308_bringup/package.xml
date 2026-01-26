@@ -4,7 +4,7 @@
   <name>ee4308_bringup</name>
   <version>0.0.0</version>
   <description>TODO: Package description</description>
-  <maintainer email="mallab@todo.todo">mallab</maintainer>
+  <maintainer email="lai.yankai@gmail.com">Lai Yan Kai</maintainer>
   <license>TODO: License declaration</license>
 
   <depend>gazebo_ros_pkgs</depend>
@@ -13,14 +13,9 @@
 
   <exec_depend>ros2launch</exec_depend>
 
-  <test_depend>ament_lint_common</test_depend>
-  <test_depend>ament_lint_auto</test_depend>
-  <test_depend>ament_cmake_gtest</test_depend>
-  <test_depend>ament_cmake_pytest</test_depend>
-  <test_depend>launch</test_depend>
-  <test_depend>launch_testing</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
+    <gazebo_ros gazebo_model_path="${prefix}/.."/>
   </export>
 </package>

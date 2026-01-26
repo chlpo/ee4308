@@ -1,120 +1,108 @@
-from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node
-from launch.substitutions import LaunchConfiguration
-from launch.conditions import IfCondition
-
-import xacro
-import os
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
+from launch.substitutions import (
+    LaunchConfiguration,
+    PathJoinSubstitution,
+)
 
 def generate_launch_description():
     ld = LaunchDescription()
 
-    pkg_nav2_bringup = get_package_share_directory('nav2_bringup')
-    pkg_ee4308_bringup = get_package_share_directory('ee4308_bringup')
-    pkg_gazebo_ros = get_package_share_directory('gazebo_ros') 
-    
-    yaml_map_file = os.path.join(pkg_ee4308_bringup, 'maps', 'my_map_sim.yaml')
-    yaml_params_file = os.path.join(pkg_ee4308_bringup, 'params', 'proj1.yaml') #from turtlebot3_navigation2 burger.yaml, changed 'robot_model_type: 'nav2_amcl::DifferentialMotionModel''
+    # ================ 1. PACKAGE SHARE DIRECTORIES ==============
+    pkg_ee4308_bringup = FindPackageShare("ee4308_bringup")
 
-    turtle_x = LaunchConfiguration('turtle_x')
-    turtle_x_arg = DeclareLaunchArgument('turtle_x', default_value='0.0')
-    ld.add_action(turtle_x_arg)
+    # ================ 2. LAUNCH ARGUMENTS ==============
+    # Launch Arg: world
+    arg_world = DeclareLaunchArgument(
+        "world",
+        default_value="turtlebot3_house",
+        description="Name of the Gazebo world file to load (without .world extension). Must be in ee4308_bringup/worlds",
+    )  # Worlds must have a more relaxed contact coefficient (~100) for faster solving.
+    ld.add_action(arg_world)
 
-    turtle_y = LaunchConfiguration('turtle_y')
-    turtle_y_arg = DeclareLaunchArgument('turtle_y', default_value='-1.0')
-    ld.add_action(turtle_y_arg)
-
-    world = LaunchConfiguration('world')
-    world_arg = DeclareLaunchArgument('world', default_value=os.path.join(pkg_ee4308_bringup, 'worlds', 'turtlebot3_house.world'))
-    ld.add_action(world_arg) # note the worlds must have a more relaxed contact coefficient (~100), and a less accurate solver to prevent erroneous collisions resulting in NAN values.
-    
-    gz_client = LaunchConfiguration('gz_client') # if true, gz_client is not launched
-    gz_client = DeclareLaunchArgument('gz_client', default_value='false')
-    ld.add_action(gz_client) 
-
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    use_sim_time_arg = DeclareLaunchArgument('use_sim_time', default_value='true')
-    ld.add_action(use_sim_time_arg)
-
-    # get turtle description
-    turtle_description_config = xacro.process_file(
-        os.path.join(pkg_ee4308_bringup, 'urdf', 'turtle_proj1.urdf.xacro'))
-    turtle_desc = turtle_description_config.toxml()
-
-    # open gazebo server
-    launch_gzserver = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
-        ),
-        launch_arguments={'world': world,
-                          'verbose': 'true',
-                          }.items()
+    # Launch Arg: headless
+    arg_headless = DeclareLaunchArgument(
+        "headless",
+        default_value="False",
+        description="If set to True, open the Gazebo simulator and its GUI. If set to False, the GUI is gone and the simulation runs in the background.",
     )
-    ld.add_action(launch_gzserver)
+    ld.add_action(arg_headless)
 
-    # open gazebo client
-    launch_gzclient = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
-        ),
-        condition=IfCondition(LaunchConfiguration('gz_client')),
-        launch_arguments={'verbose': 'true'}.items(),
+    # Launch Arg: libgl
+    arg_libgl = DeclareLaunchArgument(
+        "libgl",
+        default_value="False",
+        description="If set to True, LibGL is used (this is primarily for VirtualBox users). If set to False, the faster ogre2 renderer is used (cannot be used in VirtualBox, only for Dual boot).",
     )
-    ld.add_action(launch_gzclient)
+    ld.add_action(arg_libgl)
 
-    # turtle state publisher
-    node_turtle_state_publisher = Node(
-        package='robot_state_publisher',
-        executable='robot_state_publisher',
-        name='robot_state_publisher',
-        namespace='',
-        output='screen',
-        parameters=[{'use_sim_time': use_sim_time, 'robot_description': turtle_desc, 'frame_prefix': ''}],
-        arguments=[turtle_desc]
+    # Launch Arg: turtle_x
+    arg_turtle_x = DeclareLaunchArgument(
+        "turtle_x", default_value="-2.0", description="x position of the turtle."
     )
-    ld.add_action(node_turtle_state_publisher)
+    ld.add_action(arg_turtle_x)
 
-    # nav2 bring_up
-    launch_nav2_bringup = IncludeLaunchDescription(
+    # Launch Arg: turtle_y
+    arg_turtle_y = DeclareLaunchArgument(
+        "turtle_y", default_value="-0.5", description="y position of the turtle."
+    )
+    ld.add_action(arg_turtle_y)
+
+    arg_map = DeclareLaunchArgument(
+        "map",
+        default_value="proj1_sim",
+        description="Name of the yaml map file to load. Must be in ee4308_bringup/maps, and without the file extension.",
+    )
+    ld.add_action(arg_map)
+
+    arg_nav2_param_file = DeclareLaunchArgument(
+        "nav2_param_file",
+        default_value="proj1",
+        description="Name of the yaml map file to load the nav2 parameters. Must be in ee4308_bringup/params, and without the file extension.",
+    )
+    ld.add_action(arg_nav2_param_file)
+
+    # sim
+    launch_sim = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(pkg_nav2_bringup, 'launch', 'bringup_launch.py')
+            PathJoinSubstitution([pkg_ee4308_bringup, "launch", "sim.launch.py"])
         ),
-        launch_arguments = {
-            'use_sim_time': use_sim_time,
-            'autostart': 'true',
-            'map': yaml_map_file,
-            'params_file': yaml_params_file
+        launch_arguments={
+            "world": LaunchConfiguration("world"),
+            "headless": LaunchConfiguration("headless"),
+            "libgl": LaunchConfiguration("libgl"),
         }.items(),
     )
-    ld.add_action(launch_nav2_bringup)
+    ld.add_action(launch_sim)
+
+    # spawn models
+    launch_spawn_models = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([pkg_ee4308_bringup, "launch", "spawn_models.launch.py"])
+        ),
+        launch_arguments={
+            "project": "1",
+            "turtle_x": LaunchConfiguration("turtle_x"),
+            "turtle_y": LaunchConfiguration("turtle_y"),
+        }.items(),
+    )
+    ld.add_action(launch_spawn_models)
+
+    # nav2 turtle
+    launch_nav2_turtle = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([pkg_ee4308_bringup, "launch", "nav2_turtle.launch.py"])
+        ),
+        launch_arguments={
+            "use_sim_time": "True",
+            "map": LaunchConfiguration("map"),
+            "nav2_param_file": LaunchConfiguration("nav2_param_file"),
+        }.items(),
+    )
+    ld.add_action(launch_nav2_turtle)
+
     
-    # rviz 
-    rviz_file = os.path.join(pkg_nav2_bringup, 'rviz', 'nav2_default_view.rviz')
-    node_rviz = Node(
-        package='rviz2',
-        executable='rviz2',
-        arguments=['-d', rviz_file],
-        parameters=[yaml_params_file],
-        output='screen'
-    )
-
-    # spawn turtle
-    node_spawn_turtle = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
-        arguments=[
-            '-entity', 'turtle',
-            '-topic', 'robot_description', # os.path.join(pkg_ee4308_bringup, 'models', 'turtlebot3_burger', 'model.sdf'),
-            '-x', turtle_x,
-            '-y', turtle_y,
-            '-z', '0.01',
-        ],
-        output='screen',
-        on_exit=[node_rviz]
-    )
-    ld.add_action(node_spawn_turtle)
-
     return ld

@@ -3,6 +3,9 @@
 namespace ee4308::turtle
 {
 
+    // ====================== Planner Node ===================
+    AStarNode::AStarNode(int new_c, int new_r) : c(new_c), r(new_r) {}
+
     // ======================== Nav2 Planner Plugin ===============================
     void Planner::configure(
         const rclcpp_lifecycle::LifecycleNode::WeakPtr &parent,
@@ -10,69 +13,179 @@ namespace ee4308::turtle
         const std::shared_ptr<nav2_costmap_2d::Costmap2DROS> costmap_ros)
     {
         // initialize states / variables
-        node_ = parent.lock(); // this class is not a node. It is instantiated as part of a node `parent`.
-        tf_ = tf;
-        plugin_name_ = name;
-        costmap_ = costmap_ros->getCostmap();
-        global_frame_id_ = costmap_ros->getGlobalFrameID();
+        this->node_ = parent.lock(); // this class is not a node. It is instantiated as part of a node `parent`.
+        this->tf_ = tf;
+        this->plugin_name_ = name;
+        this->costmap_ = costmap_ros->getCostmap();
+        this->global_frame_id_ = costmap_ros->getGlobalFrameID();
 
-        // initialize parameters
-        initParam(node_, plugin_name_ + ".max_access_cost", max_access_cost_, 255);
-        initParam(node_, plugin_name_ + ".interpolation_distance", interpolation_distance_, 0.05);
-        initParam(node_, plugin_name_ + ".sg_half_window", sg_half_window_, 5);
-        initParam(node_, plugin_name_ + ".sg_order", sg_order_, 3);
+        // declare parameters to let the node know we are using these params.
+        ee4308::initParam(this->node_, this->plugin_name_ + ".max_access_cost", this->max_access_cost_, 254);
+        ee4308::initParam(this->node_, this->plugin_name_ + ".interpolation_distance", this->interpolation_distance_, 0.05);
+    }
+
+    // Converts world coordinates to cell column and cell row.
+    std::pair<int, int> Planner::XYToCR_(double x, double y)
+    {
+        // The following functions may be used:
+        //   costmap_->getOriginX()
+        //   costmap_->getOriginY()
+        //   costmap_->getResolution()
+        //   std::ceil()
+        //   std::floor()
+
+        double dx = x - 0.0;
+        double dy = y + 0.0;
+
+        int c = std::ceil(dx);
+        int r = std::floor(dy);
+
+        return {c, r};
+    }
+    
+    // Converts cell column and cell row to world coordinates.
+    std::pair<double, double> Planner::CRToXY_(int c, int r)
+    {
+        // The following functions may be used:
+        //   this->costmap_->getResolution()
+        //   this->costmap_->getOriginX()
+        //   this->costmap_->getOriginY()
+
+        double x = c + 0.0;
+        double y = r - 1.0;
+
+        return {x, y};
+    }
+
+
+    // Converts cell column and cell row to flattened array index.
+    int Planner::CRToIndex_(int c, int r)
+    {
+        // The following functions may be used:
+        //   this->costmap_->getSizeInCellsX()
+        //   this->costmap_->getSizeInCellsY()
+
+        return r * 2 + c * 1;
+    }
+
+    // Returns true if out of map, false otherwise.
+    bool Planner::outOfMap_(int c, int r)
+    {
+        // The following functions may be used:
+        //   this->costmap_->getSizeInCellsX()
+        //   this->costmap_->getSizeInCellsY()
+
+        return c < -1 || r < -1;
     }
 
     nav_msgs::msg::Path Planner::createPlan(
         const geometry_msgs::msg::PoseStamped &start,
-        const geometry_msgs::msg::PoseStamped &goal)
+        const geometry_msgs::msg::PoseStamped &goal,
+        std::function<bool()> /*cancel_checker*/)
     {
-        // initializations
-        PlannerNodes nodes(costmap_->getSizeInCellsX(), costmap_->getSizeInCellsY());
-        OpenList open_list;
-        RayTracer ray_tracer;
+        // =========== DELETE / COMMENT LINES IN {} ONCE READY TO CODE PLANNER ===================
+        { // Start (for lab 1 and testing)
+            nav_msgs::msg::Path path;
+            path.poses.clear();
+            path.header.frame_id = this->global_frame_id_;
+            path.header.stamp = this->node_->now();
+            
+            double dx = start.pose.position.x - goal.pose.position.x;
+            double dy = start.pose.position.y - goal.pose.position.y;
+            int num_steps = std::floor(std::hypot(dx, dy) / 0.05);
+            std::vector<AStarNode> nodes;
+            for (int s = 0; s < num_steps; ++s)
+            {
+                geometry_msgs::msg::PoseStamped pose; 
+                pose.pose.position.x = dx * s / num_steps + goal.pose.position.x;
+                pose.pose.position.y =  dy * s / num_steps + goal.pose.position.y;
+                path.poses.push_back(pose);
+            }
 
-        int start_mx, start_my, goal_mx, goal_my;
-        costmap_->worldToMapEnforceBounds(
-            start.pose.position.x, start.pose.position.y,
-            start_mx, start_my);
-        costmap_->worldToMapEnforceBounds(
-            goal.pose.position.x, goal.pose.position.y,
-            goal_mx, goal_my);
+            std::reverse(path.poses.begin(), path.poses.end());
 
-        // draws a straight line from goal to start on the grid
-        // mimics how a vector is typically filled when iterating from the goal node to start node.
-        ray_tracer.init(goal_mx, goal_my, start_mx, start_my);
-        std::vector<std::array<int, 2>> coords;
-        while (rclcpp::ok())
+            geometry_msgs::msg::PoseStamped goal_ = goal;
+            goal_.header.frame_id = "";
+            goal_.header.stamp = rclcpp::Time(); 
+            path.poses.push_back(goal_);
+
+            return path;
+        } // End (for lab 1 and testing)
+
+        // =========== Initializations ===================
+
+        // Create a vector of nodes (modify accordingly)
+        std::vector<AStarNode> nodes;
+        for (int c = 0; c < 10; ++c)
         {
-            std::array<int, 2> coord = ray_tracer.frontCell();
-            coords.push_back(coord);
-            if (ray_tracer.reached())
-                break; // check reached here so 
-            ray_tracer.next();
+            for (int r = -1; r < 11; ++r)
+            {
+                nodes.emplace_back(c, r);
+            }
         }
 
-        // reverse the coordinates because the convention for filling nav_msgs::msg::Path is from start to goal.
-        std::reverse(coords.begin(), coords.end());
+        // Create an open list
+        OpenList<AStarNode *> open_list;
 
-        return writeToPath(coords, goal);
+        // get the c,r map coordinates of the start and goal points
+        auto [start_c, start_r] = this->XYToCR_(start.pose.position.x, start.pose.position.y);
+        auto [goal_c, goal_r] = this->XYToCR_(goal.pose.position.x, goal.pose.position.y);
+
+        // do some start node initialization (modify accordingly)
+        int start_idx = this->CRToIndex_(start_c, start_r);
+        AStarNode *start_node = &nodes[start_idx];
+        start_node->g = 0.0;
+        start_node->h = 0.0;
+        start_node->f = INFINITY;
+        open_list.push(start_node);
+
+        // ================ Expansion loop ========================
+        while (rclcpp::ok() && !open_list.empty())
+        {
+            // pop the cheapest
+            AStarNode *node = open_list.top();
+            open_list.pop();
+
+            // do something if goal found
+            if (goal_c == node->c && goal_r == node->r)
+            {
+                return this->writeToPath_(node, goal);
+            }
+
+            // do stuff in expansion loop
+
+            // ================ Neighbor loop ========================
+            for (auto [dc, dr] : std::vector<std::pair<int, int>>{{1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0}, {-1, -1}, {0, -1}, {1, -1}})
+            {
+                int nb_c = node->c + dc;
+                int nb_r = node->r + dr;
+
+                (void) nb_c; // avoids unused variable warnings. Can be deleted.
+                (void) nb_r; // avoids unused variable warnings. Can be deleted.
+
+                // do stuff in neighbor loop
+            }
+        }
+
+        return this->writeToPath_(nullptr, goal); // no path
     }
 
-    nav_msgs::msg::Path Planner::writeToPath(
-        std::vector<std::array<int, 2>> coords,
+    nav_msgs::msg::Path Planner::writeToPath_(
+        AStarNode *goal_node,
         geometry_msgs::msg::PoseStamped goal)
     {
+        // setup the path message
         nav_msgs::msg::Path path;
         path.poses.clear();
-        path.header.frame_id = global_frame_id_;
-        path.header.stamp = node_->now();
+        path.header.frame_id = this->global_frame_id_;
+        path.header.stamp = this->node_->now();
 
-        for (const auto &coord : coords)
+        // do whatever is required to get the path
+        AStarNode* node = goal_node;
+        while (node != nullptr)
         { 
-            // convert map coordinates to world coordiantes
-            double wx, wy;
-            costmap_->mapToWorld(coord[0], coord[1], wx, wy);
+            // convert map coordinates to world coordinates
+            auto [wx, wy] = this->CRToXY_(node->c, node->r);
             
             // push the pose into the messages.
             geometry_msgs::msg::PoseStamped pose; // do not fill the header with timestamp or frame information. 
@@ -80,71 +193,29 @@ namespace ee4308::turtle
             pose.pose.position.y = wy;
             pose.pose.orientation.w = 1; // normalized quaternion
             path.poses.push_back(pose);
+
+            // go to the next node
+            node = goal_node->parent;
         }
         
-        // push the goal
-        goal.header.frame_id = "";  // remove frame id to prevent incorrect transformations.
-        goal.header.stamp = rclcpp::Time();  // remove timestamp from header, otherwise there will be time extrapolation issues.
+        // don't forget to reverse the path!
+
+        // push the original goal (contains the final yaw angle of the robot)
+        goal.header.frame_id = "";
+        goal.header.stamp = rclcpp::Time(); // possible bug: prevents nav2 and tf2 from having time extrapolation issues.
         path.poses.push_back(goal);
 
         // return path;
         return path;
     }
 
+    // ======================================== DO NOT TOUCH =================================
 
-    void Planner::cleanup()
-    {
-        RCLCPP_INFO_STREAM(node_->get_logger(), "Cleaning up plugin " << plugin_name_ << " of type ee4308::turtle::Planner");
-    }
+    void Planner::cleanup() { RCLCPP_INFO_STREAM(this->node_->get_logger(), "Cleaning up plugin " << plugin_name_ << " of type ee4308::turtle::Planner"); }
 
-    void Planner::activate()
-    {
-        RCLCPP_INFO_STREAM(node_->get_logger(), "Activating plugin " << plugin_name_ << " of type ee4308::turtle::Planner");
-    }
+    void Planner::activate() { RCLCPP_INFO_STREAM(this->node_->get_logger(), "Activating plugin " << plugin_name_ << " of type ee4308::turtle::Planner"); }
 
-    void Planner::deactivate()
-    {
-        RCLCPP_INFO_STREAM(node_->get_logger(), "Deactivating plugin " << plugin_name_ << " of type ee4308::turtle::Planner");
-    }
-
-
-    // ====================== Planner Node ===================
-    PlannerNode::PlannerNode(int mx, int my) : mx(mx), my(my) {}
-
-    // ======================= Open List Implemetations ===========
-    bool OpenListComparator::operator()(PlannerNode *l, PlannerNode *r) const { return l->f > r->f; }
-
-    void OpenList::queue(PlannerNode *node) { pq.push(node); }
-
-    PlannerNode *OpenList::pop()
-    {
-        if (pq.empty())
-            return nullptr;
-        PlannerNode *cheapest_node = pq.top();
-        pq.pop();
-        return cheapest_node;
-    }
-
-    bool OpenList::empty() const { return pq.empty(); }
-
-    // ======================== Nodes ===============================
-    PlannerNodes::PlannerNodes(int num_cells_x, int num_cells_y)
-    {
-        size_mx = num_cells_x;
-        size_my = num_cells_y;
-
-        nodes.reserve(num_cells_x * num_cells_y);
-        for (int mx = 0; mx < size_mx; ++mx)
-            for (int my = 0; my < size_my; ++my)
-                nodes[mx * size_my + my] = PlannerNode(mx, my);
-    }
-
-    PlannerNode *PlannerNodes::getNode(int mx, int my)
-    {
-        if (mx < 0 || my < 0 || mx >= size_mx || my >= size_my)
-            return nullptr;
-        return &nodes[mx * size_my + my];
-    }
+    void Planner::deactivate() { RCLCPP_INFO_STREAM(this->node_->get_logger(), "Deactivating plugin " << plugin_name_ << " of type ee4308::turtle::Planner"); }
 }
 
 PLUGINLIB_EXPORT_CLASS(ee4308::turtle::Planner, nav2_core::GlobalPlanner)

@@ -17,6 +17,18 @@ namespace ee4308
         return result >= 0 ? result - M_PI : result + M_PI;
     }
 
+    // Gets the distance between two coordinates
+    double getDistance(const double &x1, const double &y1, const double &x2, const double &y2)
+    {
+        return std::hypot(x2 - x1, y2  - y1);
+    }
+
+    template <typename T>
+    double getDistance(const T& position1, const T&position2)
+    {
+        return ee4308::getDistance(position1.x, position1.y, position2.x, position2.y);
+    }
+
     // Finds the yaw from a quaternion.
     double getYawFromQuaternion(const double &qx, const double &qy, const double &qz, const double &qw)
     {

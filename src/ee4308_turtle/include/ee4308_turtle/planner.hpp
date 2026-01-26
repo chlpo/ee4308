@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <queue>
+#include <deque>
 
 #include "rclcpp/rclcpp.hpp"
 #include "pluginlib/class_loader.hpp"
@@ -11,55 +13,35 @@
 #include "sensor_msgs/msg/laser_scan.hpp"
 #include "eigen3/Eigen/Dense"
 
-#include "ee4308_core/core.hpp"
-#include "ee4308_core/raytracer.hpp"
+#include "ee4308_turtle/core.hpp"
 
 #pragma once
 
 namespace ee4308::turtle
 {
     // ====================== Planner Node ===================
-    struct PlannerNode
+    struct AStarNode
     {
         double f = INFINITY;
         double g = INFINITY;
         double h = INFINITY;
-        PlannerNode *parent = nullptr;
-        int mx = -1; 
-        int my = -1; 
+        AStarNode *parent = nullptr;
+        int c = -1;
+        int r = -1;
         bool expanded = false;
 
-        PlannerNode(int mx, int my);
+        AStarNode(int new_c, int new_r);
     };
 
     // ======================= Open List ===========================
+    template <typename T> // T must be pointer type
     struct OpenListComparator
     {
-        bool operator()(PlannerNode *l, PlannerNode *r) const;
+        bool operator()(const T &l, const T &r) const { return l->f > r->f; };
     };
 
-    class OpenList
-    {
-    private:
-        std::priority_queue<PlannerNode *, std::deque<PlannerNode *>, OpenListComparator> pq;
-
-    public:
-        void queue(PlannerNode *node);
-        PlannerNode *pop();
-        bool empty() const;
-    };
-
-    // ======================== Nodes ===============================
-    class PlannerNodes
-    {
-    private:
-        std::vector<PlannerNode> nodes;
-        int size_mx, size_my;
-
-    public:
-        PlannerNodes(int num_cells_x, int num_cells_y);
-        PlannerNode *getNode(int mx, int my);
-    };
+    template <typename T> // T must be pointer type
+    using OpenList = std::priority_queue<T, std::deque<T>, OpenListComparator<T>>; 
 
     // ======================== Nav2 Planner Plugin ===============================
     class Planner : public nav2_core::GlobalPlanner
@@ -78,7 +60,8 @@ namespace ee4308::turtle
 
         nav_msgs::msg::Path createPlan(
             const geometry_msgs::msg::PoseStamped &start,
-            const geometry_msgs::msg::PoseStamped &goal) override;
+            const geometry_msgs::msg::PoseStamped &goal,
+            std::function<bool()> cancel_checker) override;
 
     protected:
         std::shared_ptr<tf2_ros::Buffer> tf_;
@@ -90,10 +73,13 @@ namespace ee4308::turtle
         // parameters
         int max_access_cost_;
         double interpolation_distance_;
-        int sg_half_window_;
-        int sg_order_;
-        
-        nav_msgs::msg::Path writeToPath(std::vector<std::array<int, 2>> coords, geometry_msgs::msg::PoseStamped goal);
+
+        std::pair<int, int> XYToCR_(double x, double y);
+        int CRToIndex_(int c, int r);
+        std::pair<double, double> CRToXY_(int c, int r);
+        bool outOfMap_(int c, int r);
+
+        nav_msgs::msg::Path writeToPath_(AStarNode *goal_node, geometry_msgs::msg::PoseStamped goal);
     };
 
 }

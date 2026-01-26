@@ -9,9 +9,10 @@ endif()
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY launch rviz params maps urdf worlds
+  DIRECTORY launch rviz params maps worlds models
   DESTINATION share/${PROJECT_NAME}/
 )
+
 
 set(ignoreMe "${CMAKE_EXPORT_COMPILE_COMMANDS}")
 
