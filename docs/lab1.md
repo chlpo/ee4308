@@ -11,11 +11,11 @@ Lab 1: Designing a Nav2 Controller Plugin
 
 [1&emsp;Administrative Matters](#1administrative-matters)
 
-[&emsp;1.1&emsp;Submittables](#11submittables)
+&emsp;[1.1&emsp;Submittables](#11submittables)
 
-[&emsp;&emsp;1.1.1&emsp;Answers to L1 Questions](#111answers-to-l1-questions)
+&emsp;&emsp;[1.1.1&emsp;Answers to L1 Questions](#111answers-to-l1-questions)
 
-[&emsp;&emsp;1.1.2&emsp;Zip file to L1](#112zip-file-to-l1)
+&emsp;&emsp;[1.1.2&emsp;Zip file to L1](#112zip-file-to-l1)
 
 [2&emsp;Download and Build Files](#2download-and-build-files)
 
@@ -25,11 +25,11 @@ Lab 1: Designing a Nav2 Controller Plugin
 
 [5&emsp;Pure Pursuit](#5pure-pursuit) 
 
-[&emsp;5.1&emsp;Relevant Files](#51relevant-files)
+&emsp;[5.1&emsp;Relevant Files](#51relevant-files)
 
-[&emsp;5.2&emsp;Implement `computeVelocityCommands()`](#52implement-computevelocitycommands)
+&emsp;[5.2&emsp;Implement `computeVelocityCommands()`](#52implement-computevelocitycommands)
 
-[&emsp;5.3&emsp;Building and Testing](#53building-and-testing)
+&emsp;[5.3&emsp;Building and Testing](#53building-and-testing)
 
 [6&emsp;Questions](#6questions)
 
@@ -51,7 +51,7 @@ Take note of the deadline and install all relevant software before proceeding to
 Submit the answers for the three questions from [6 Questions](#6questions) on the Canvas Quiz.
 
 ### 1.1.2&emsp;Zip file to L1
-Submit a zip file containing the code to Canvas Quiz. To avoid penalties, 
+Submit a zip file containing the code to Canvas. To avoid penalties, 
 1. Named the zip as `l1_<matric>.zip` where `<matric>` is your student number in **lowercase** (e.g. `l1_a0987654n.zip`). 
 2. Rename the workspace folder to `l1_<matric>`.
 3. Ensure that the zip file have the following structure. Do not zip other files or directories.

@@ -10,59 +10,59 @@ Project 1: Designing Nav2 Controller and Planner Plugins
 # Table of Contents
 [1&emsp;Administrative Matters](#1administrative-matters)
 
-[&emsp;1.1&emsp;Submittables](#11submittables)
+&emsp;[1.1&emsp;Submittables](#11submittables)
 
-[&emsp;1.2&emsp;Robot Loaning and Testing](#12robot-loaning-and-testing)
+&emsp;[1.2&emsp;Robot Loaning and Testing](#12robot-loaning-and-testing)
 
 [2&emsp;Regulated Pure Pursuit](#2regulated-pure-pursuit)
 
-[2.1&emsp;Implementation](#21implementation)
+&emsp;[2.1&emsp;Implementation](#21implementation)
 
-[2.1.1&emsp;Implement `computeVelocityCommands()`](#211implement-computevelocitycommands)
+&emsp;&emsp;[2.1.1&emsp;Implement `computeVelocityCommands()`](#211implement-computevelocitycommands)
 
 [3&emsp;A* Path Planning and Savitsky-Golay Smoothing](#3a-path-planning-and-savitsky-golay-smoothing)
 
-[&emsp;3.1&emsp;Background](#31background)
+&emsp;[3.1&emsp;Background](#31background)
 
-[&emsp;&emsp;3.1.1&emsp;Savitsky-Golay Smoothing](#311savitsky-golay-smoothing)
+&emsp;&emsp;[3.1.1&emsp;Savitsky-Golay Smoothing](#311savitsky-golay-smoothing)
 
-[&emsp;&emsp;3.1.2&emsp;Costmap](#312costmap)
+&emsp;&emsp;[3.1.2&emsp;Costmap](#312costmap)
 
-[&emsp;&emsp;3.1.3&emsp;Inflation Radius and Circumscribed Radius](#313inflation-radius-and-circumscribed-radius)
+&emsp;&emsp;[3.1.3&emsp;Inflation Radius and Circumscribed Radius](#313inflation-radius-and-circumscribed-radius)
 
-[&emsp;3.2&emsp;Implementation](#32implementation)
+&emsp;[3.2&emsp;Implementation](#32implementation)
 
-[&emsp;&emsp;3.2.1&emsp;`XYToCR_()`](#321xytocr_)
+&emsp;&emsp;[3.2.1&emsp;`XYToCR_()`](#321xytocr_)
 
-[&emsp;&emsp;3.2.2&emsp;`CRToXY_()`](#322crtoxy_)
+&emsp;&emsp;[3.2.2&emsp;`CRToXY_()`](#322crtoxy_)
 
-[&emsp;&emsp;3.2.3&emsp;`CRToIndex_()`](#323crtoindex_)
+&emsp;&emsp;[3.2.3&emsp;`CRToIndex_()`](#323crtoindex_)
 
-[&emsp;&emsp;3.2.4&emsp;`outOfMap_()`](#324outofmap_)
+&emsp;&emsp;[3.2.4&emsp;`outOfMap_()`](#324outofmap_)
 
-[&emsp;&emsp;3.2.5&emsp;Implement `createPlan()`](#325implement-createplan)
+&emsp;&emsp;[3.2.5&emsp;Implement `createPlan()`](#325implement-createplan)
 
 [4&emsp;Physical Experiments](#4physical-experiments)
 
-[&emsp;4.1&emsp;Playing Field Demonstration](#41playing-field-demonstration)
+&emsp;[4.1&emsp;Playing Field Demonstration](#41playing-field-demonstration)
 
-[&emsp;4.2&emsp; Turning on the Turtlebot for the First Time](#42-turning-on-the-turtlebot-for-the-first-time)
+&emsp;[4.2&emsp; Turning on the Turtlebot for the First Time](#42-turning-on-the-turtlebot-for-the-first-time)
 
-[&emsp;4.3&emsp;Change `ROS_DOMAIN_ID` on Turtlebot and Remote PC](#43change-ros_domain_id-on-turtlebot-and-remote-pc)
+&emsp;[4.3&emsp;Change `ROS_DOMAIN_ID` on Turtlebot and Remote PC](#43change-ros_domain_id-on-turtlebot-and-remote-pc)
 
-[&emsp;4.4&emsp;Connect Turtlebot to Wi-Fi](#44connect-turtlebot-to-wi-fi)
+&emsp;[4.4&emsp;Connect Turtlebot to Wi-Fi](#44connect-turtlebot-to-wi-fi)
 
-[&emsp;4.5&emsp;Connect Remote PC to Wi-Fi](#45connect-remote-pc-to-wi-fi)
+&emsp;[4.5&emsp;Connect Remote PC to Wi-Fi](#45connect-remote-pc-to-wi-fi)
 
-[&emsp;4.6&emsp;SSH into Turtlebot](#46ssh-into-turtlebot)
+&emsp;[4.6&emsp;SSH into Turtlebot](#46ssh-into-turtlebot)
 
-[&emsp;4.7&emsp;Running the Turtlebot Bringup](#47running-the-turtlebot-bringup)
+&emsp;[4.7&emsp;Running the Turtlebot Bringup](#47running-the-turtlebot-bringup)
 
-[&emsp;4.8&emsp;Running the SLAM operation](#48running-the-slam-operation)
+&emsp;[4.8&emsp;Running the SLAM operation](#48running-the-slam-operation)
 
-[&emsp;4.9&emsp;Testing the Navigation Plugins](#49testing-the-navigation-plugins)
+&emsp;[4.9&emsp;Testing the Navigation Plugins](#49testing-the-navigation-plugins)
 
-[&emsp;4.10&emsp;Turn off Turtlebot](#410turn-off-turtlebot)
+&emsp;[4.10&emsp;Turn off Turtlebot](#410turn-off-turtlebot)
 
 
 # 1&emsp;Administrative Matters
@@ -84,9 +84,71 @@ For all filenames, label as `p1_team##` (**lowercase**), where `##` is the doubl
 
 | Component | Description |
 | --- | --- |
-| P1C | Zip the `ee4308/src` folder into `p1_team##.zip`. The component is benchmarked in simulation (make sure the tuned parameters can perform adequately in simulation). Marks are given depending on the demonstration video, how well the robot can navigate tight corners and narrow corridors, and the quality of improvements. The robot should move efficiently; neither too fast nor slow. |
+| P1C | Zip selected files into `p1_team##.zip` and submit. See the directory structure below. The component is benchmarked in simulation (make sure the tuned parameters can perform adequately in simulation). Marks are given depending on the demonstration video, how well the robot can navigate tight corners and narrow corridors, and the quality of improvements. The robot should move efficiently; neither too fast nor slow. |
 | P1R | A report `p1_team##.pdf`. **Do not include your names in the report, only the matric numbers**. About 10 to 15 pages (no hard limit) excluding front-matter and back-matter. In a good report, the existing algorithms are examined in detail and simple solutions are proposed to significantly improve the algorithms. Deliberate comparisons are made to compare solutions, and suggestions are given based on realistic situations. Experiments and methodologies to tune parameters are well designed and justified. The narrative is concise and clear. Any figures, tables and references are labelled. There is a title page and content page, and the report is tidy and well organized. **Please include a page on each member's contribution**. |
 | P1P | A demonstration video `p1_team##.mp4` showing a physical run in the lab's obstacle course. Questions will be asked based on each member's contribution. |
+
+
+Ensure that the zip file follows the structure and names below:
+
+1. Named the zip as `p1_team##.zip` where `##` is your two digit team number (e.g. `p1_team07.zip`). 
+2. Rename the workspace folder to `p1_team07`.
+3. Ensure that the zip file have the following structure. Do not zip other files or directories.
+
+<table><tbody><tr><td>
+    <details open>
+        <summary><code>p1_team07.zip</code>&emsp;The zip file.</summary>
+        <dl>
+            <dd><details open>
+                <summary><code>p1_team07/</code>&emsp;The renamed workspace directory.</summary>
+                <dl>
+                    <dd><details open> 
+                        <summary><code>src/</code>&emsp;Contains packages.</summary>
+                        <dl>
+                            <dd><details open>
+                                <summary><code>ee4308_bringup/</code>&emsp;Package containing scripts that start the projects.</summary>
+                                <dl>
+                                    <dd><details open>
+                                        <summary><code>params/</code></summary>
+                                        <dl>
+                                            <dd><code>proj1.yaml</code>&emsp;Contains adjustable parameter values.</dd>
+                                        </dl>
+                                    </details></dd>
+                                </dl>
+                            </details></dd>
+                            <dd><details open>
+                                <summary><code>ee4308_turtle/</code>&emsp;Package implementing the turtlebot's controller</summary>
+                                <dl>
+                                    <dd><details open>
+                                        <summary><code>include/</code>&emsp;Directory for <code>.hpp</code> header files.</summary>
+                                        <dl>
+                                            <dd><details open>
+                                                <summary><code>ee4308_turtle/</code></summary>
+                                                <dl>
+                                                    <dd><code>controller.hpp</code>&emsp;Contains code declarations for the controller.</dd>
+                                                    <dd><code>planner.hpp</code>&emsp;Contains code declarations for the planner.</dd>
+                                                    <dd>...Other <code>.hpp</code> files if required</dd>
+                                                </dl>
+                                            </details></dd>
+                                        </dl>
+                                    </details></dd>
+                                    <dd><details open>
+                                        <summary><code>src/</code>&emsp;Directory for <code>.cpp</code> files.</summary>
+                                        <dl>
+                                            <dd><code>controller.cpp</code>&emsp;Contains code definitions for the controller.</dd>
+                                            <dd><code>planner.cpp</code>&emsp;Contains code definitions for the planner.</dd>
+                                            <dd>...Other <code>.cpp</code> files if required</dd>
+                                        </dl>
+                                    </details></dd>
+                                </dl>
+                            </details></dd>
+                        </dl>
+                    </details></dd>
+                </dl>
+            </details></dd>
+        </dl>
+    </details>
+</td></tr></tbody></table>
 
 ## 1.2&emsp;Robot Loaning and Testing
 After programming and testing in simulation, the code has to be tested on a physical robot. Every team will be able to loan a robotic kit to test on a playing field in the lab. Three waypoints will be provided that the robot has to move to, and the physical run has to be filmed for the demonstration video.
