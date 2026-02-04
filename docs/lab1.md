@@ -321,7 +321,7 @@ To test any modification made to the source and header files, the workspace has 
         ```
     - If dual booted and using Ubuntu natively,
         ```bash
-        ros2 launch ee4308_bringup proj1_sim_slam.launch.py
+        ros2 launch ee4308_bringup proj1_sim.launch.py
         ```
     Remember to estimate the initial robot position. Place the goal pose such that the straight line path does not intersect any obstacle. 
 
