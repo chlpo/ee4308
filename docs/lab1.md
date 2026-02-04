@@ -317,11 +317,11 @@ To test any modification made to the source and header files, the workspace has 
 2. Test to see if the controller is working by running the following commands from Section 4. 
     - If using VirtualBox,
         ```bash
-        ros2 launch ee4308_bringup proj1_sim_slam.launch.py libgl:=True
+        ros2 launch ee4308_bringup proj1_sim.launch.py libgl:=True
         ```
     - If dual booted and using Ubuntu natively,
         ```bash
-        ros2 launch ee4308_bringup proj1_sim_slam.launch.py
+        ros2 launch ee4308_bringup proj1_sim.launch.py
         ```
     Remember to estimate the initial robot position. Place the goal pose such that the straight line path does not intersect any obstacle. 
 
