@@ -131,11 +131,11 @@ Submit a zip file containing the code to Canvas. To avoid penalties,
 4. To run the code:
     - If using VirtualBox,
         ```bash
-        ros2 launch ee4308_bringup proj2_sim.launch.py
+        ros2 launch ee4308_bringup proj2_sim.launch.py libgl:=True
         ```
     - If dual booted and using Ubuntu natively,
         ```bash
-        ros2 launch ee4308_bringup proj2_sim.launch.py libgl:=True
+        ros2 launch ee4308_bringup proj2_sim.launch.py
         ```
 
 5. If using a lab computer or a computer connected to a shared network, ensure that no one is publishing into your `ROS_DOMAIN_ID`. 
