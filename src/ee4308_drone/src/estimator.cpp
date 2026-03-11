@@ -148,6 +148,18 @@ namespace ee4308::drone
         // =========
         
         Ysonar_ = msg.ranges[0];
+        Eigen::Vector2d H_z_T; //this is 2x1
+        H_z_T << 1.0,0.0;
+        Eigen::Vector2d H_z;
+        H_z << H_z_T.transpose();
+        float V_k_z = 1.0; //cannot add float to matrix
+        float R_k_z = var_sonar_;
+        Eigen::Vector2d K_z;
+        K_z << Pz_*H_z_T*(H_z*Pz_*H_z_T + (V_k_z*R_k_z*V_k_z));
+
+        Eigen::Matrix2d P_k_z;
+        P_k_z << Pz_ - K_z*H_z*Pz_;
+
 
         // ==== [FOR LAB 2 ONLY] ==== 
         // The following is necessary so that the covariance bubble in RViz does not fill up the screen.
@@ -236,6 +248,24 @@ namespace ee4308::drone
         // =========
 
         // rewrite or delete the following
+        Eigen::Matrix2d F_zk; //for 2x2
+        F_zk << 1.0, dt,
+        0.0, 1.0;
+        Eigen::Vector2d W_zk;
+        W_zk << (0.5*dt*dt), dt;
+        Eigen::Vector2d XZPrev;
+        XZPrev << Xz_(0), Xz_(1);
+        Eigen::Vector2d XZK;
+        float input = msg.linear_acceleration.z - GRAVITY;
+        XZK = F_zk*XZPrev + W_zk*input;
+        //msg.orientation.
+        //Xz_(0);//position
+        //Xz_(1);//velocity
+        float Q_z = var_imu_z_;
+        Eigen::Matrix2d P_zkminus1;
+        P_zkminus1 = F_zk*Pz_*F_zk.transpose()+ W_zk*Q_z*W_zk.transpose();
+        Xz_ = W_zk;
+        Pz_ = P_zkminus1;
         (void) msg;
     }
 
@@ -390,3 +420,5 @@ namespace ee4308::drone
 }
 
 RCLCPP_COMPONENTS_REGISTER_NODE(ee4308::drone::Estimator);
+
+
