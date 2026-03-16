@@ -146,8 +146,11 @@ namespace ee4308::drone
         // Pz_
         // .transpose()
         // =========
-        
         Ysonar_ = msg.ranges[0];
+        //validation check
+        if (!std::isfinite(Ysonar_)) return;
+
+        
         Eigen::Vector2d H_z_T; //this is 2x1
         H_z_T << 1.0,0.0;
         Eigen::Vector2d H_z;
@@ -155,14 +158,19 @@ namespace ee4308::drone
         double V_k_z = 1.0; //cannot add float to matrix
         double R_k_z = var_sonar_;
         Eigen::Vector2d K_z;
-        // Calculate the denominator (Innovation Covariance 'S')
+        // Innovation Covariance 'S'
         // Extract the 1x1 matrix result as a double using .value()
         double S = (H_z * Pz_ * H_z_T).value() + (V_k_z * R_k_z * V_k_z);
         K_z = Pz_ * H_z_T * (1.0 / S);
         //K_z << Pz_*H_z_T*(H_z*Pz_*H_z_T + (V_k_z*R_k_z*V_k_z));
-
+        //innovation term
+        double innovation = Ysonar_ - (H_z*Xz_).value();
         Eigen::Matrix2d P_k_z;
         P_k_z << Pz_ - K_z*H_z*Pz_;
+
+        //update
+        Pz_ = P_k_z;
+        Xz_ = Xz_ + K_z * innovation;
 
 
         // ==== [FOR LAB 2 ONLY] ==== 
@@ -271,6 +279,8 @@ namespace ee4308::drone
         Xz_ = W_zk;
         Pz_ = P_zkminus1;
         (void) msg;
+
+        RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Pos: [%.2f, %.2f, %.2f] Yaw: %.2f", Xx_(0), Xy_(0), Xz_(0), Xa_(0));
     }
 
     void Estimator::callbackSubTrueOdom_(const nav_msgs::msg::Odometry msg)
