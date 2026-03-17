@@ -172,7 +172,7 @@ namespace ee4308::drone
             odom_.pose.pose.position.z = cruise_height_;
         } else if (state_ == INITIAL){
             //dk if im supposed to add smth here or if its the controllers job
-        } else if(state == TURTLE_POSITION){
+        } else if(state_ == TURTLE_POSITION){
             //dk if im supposed to add smth here of if its the controllers job
         }
         else if (state_ == END)
