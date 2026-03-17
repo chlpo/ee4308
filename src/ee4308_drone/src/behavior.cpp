@@ -96,17 +96,26 @@ namespace ee4308::drone
                         transition_(INITIAL);
                     }
                     break;
-                case INITIAL:
-                    if(turtle_stop_){
+                case INITIAL: //4
+                    if(turtle_stop_){ //if turtle has stopped and reached goal
                         transition_(LANDING);
                     } else {
                         transition_(TURTLE_POSITION);}
                     break;
+                case LANDING://5
+                        if (odom_.twist.twist.angular.z == 0 && odom_.twist.twist.angular.y == 0 && odom_.twist.twist.angular.x == 0 
+                            && odom_.twist.twist.linear.z == 0 && odom_.twist.twist.linear.y == 0 && odom_.twist.twist.linear.x ==0
+                        ){
+                            transition_(END);
+                        }
+                        break;
+                        
             
 
             }
         } else {
-            //requestPlan();
+            Behavior::requestPlan_(odom_.pose.pose.position.x, odom_.pose.pose.position.y,odom_ .pose.pose.position.z,
+            waypoint_x_, waypoint_y_, waypoint_z_);
         }
 
         // request a plan with requestPlan(). This is done every time cbTimer() is called.
