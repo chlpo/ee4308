@@ -130,7 +130,7 @@ namespace ee4308::drone
 
     void Behavior::transition_(int new_state)
     {
-        // std::cout << "transition_ from " << state_ << " To " << new_state << std::endl;
+        std::cout << "transition_ from " << state_ << " To " << new_state << std::endl;
 
         // ==== make use of ====
         // new_state (function argument)
@@ -170,6 +170,10 @@ namespace ee4308::drone
             odom_.pose.pose.position.x = initial_x_;
             odom_.pose.pose.position.y = initial_y_;
             odom_.pose.pose.position.z = cruise_height_;
+        } else if (state_ == INITIAL){
+            //dk if im supposed to add smth here or if its the controllers job
+        } else if(state == TURTLE_POSITION){
+            //dk if im supposed to add smth here of if its the controllers job
         }
         else if (state_ == END)
         {
