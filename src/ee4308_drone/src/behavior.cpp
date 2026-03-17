@@ -66,13 +66,47 @@ namespace ee4308::drone
         // waypoint_x_, waypoint_y_, waypoint_z_
         // ==== ====
 
-        if (1)  // change the 1: if (reached waypoint)
-        {
-            if (state_ == TAKEOFF)
+        //int fsm[7][7] ;
+
+        if ((odom_.pose.pose.position.x == waypoint_x_) && (odom_.pose.pose.position.y == waypoint_y_))  // reached waypoint
+        {//or use reached_thres_??
+            /*if (state_ == TAKEOFF)
             {
                 transition_(INITIAL);
-            }
+            }*/
             // ...
+            switch(state_){
+                case BEGIN: //0
+                    transition_(TAKEOFF);
+                    break;
+                case TAKEOFF: //1
+                    if(odom_.pose.pose.position.z > cruise_height_){
+                        transition_(TURTLE_POSITION);  
+                    } else{ //not at cruise height yet
+                        transition_(INITIAL);}
+                    break;
+                case TURTLE_POSITION://2
+                    transition_(TURTLE_WAYPOINT);
+                    break;
+
+                case TURTLE_WAYPOINT://3
+                    if(turtle_stop_){//if turtle has stopped --- then how? check if 3 states are reached?
+                        transition_(LANDING);
+                    } else {
+                        transition_(INITIAL);
+                    }
+                    break;
+                case INITIAL:
+                    if(turtle_stop_){
+                        transition_(LANDING);
+                    } else {
+                        transition_(TURTLE_POSITION);}
+                    break;
+            
+
+            }
+        } else {
+            //requestPlan();
         }
 
         // request a plan with requestPlan(). This is done every time cbTimer() is called.
