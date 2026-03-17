@@ -67,9 +67,15 @@ namespace ee4308::drone
         // ==== ====
 
         //int fsm[7][7] ;
+        double x_diff = odom_.pose.pose.position.x - waypoint_x_;
+        double y_diff = odom_.pose.pose.position.y - waypoint_y_;
+        double z_diff = odom_.pose.pose.position.z - waypoint_z_;
 
-        if ((odom_.pose.pose.position.x == waypoint_x_) && (odom_.pose.pose.position.y == waypoint_y_))  // reached waypoint
-        {//or use reached_thres_??
+        double magnitude = std::pow((std::pow(x_diff,2)+std::pow(y_diff,2)+std::pow(z_diff,2)),0.5);
+
+
+        if (magnitude <= reached_thres_)  // reached waypoint
+        {
             /*if (state_ == TAKEOFF)
             {
                 transition_(INITIAL);
@@ -148,6 +154,22 @@ namespace ee4308::drone
 
             // set the waypoint.
             setWaypoint_(initial_x_, initial_y_, cruise_height_);
+            //if initial remains lower than cruise height
+
+            
+        } else if (state_ == TURTLE_WAYPOINT){
+            //check if its at the goal yet
+            geometry_msgs::msg::PoseStamped_ goal = turtle_plan_.poses.back();
+            if(goal.pose.position.x == odom_.pose.pose.position.x && goal.pose.position.y == odom_.pose.pose.position.y && goal.pose.position.z == odom_.pose.pose.position.z){
+                turtle_stop_ = true;
+            } else {
+                //go to current waypoint ??
+            }
+            
+        }else if (state_ == LANDING){
+            odom_.pose.pose.position.x = initial_x_;
+            odom_.pose.pose.position.y = initial_y_;
+            odom_.pose.pose.position.z = cruise_height_;
         }
         else if (state_ == END)
         {
