@@ -63,6 +63,8 @@ namespace ee4308::drone
         double waypoint_y_;
         double waypoint_z_;
 
+        size_t plan_idx; //to track waypoint ptr, size_t cause std::vector type is size_t
+
     public:
         explicit Behavior(
             const rclcpp::NodeOptions &options,
