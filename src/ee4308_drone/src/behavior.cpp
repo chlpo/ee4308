@@ -18,6 +18,7 @@ namespace ee4308::drone
         this->initial_x_ = ee4308::getParameter<double>(this, "initial_x", -2.0).as_double();
         this->initial_y_ = ee4308::getParameter<double>(this, "initial_y", -2.0).as_double();
         this->initial_z_ = ee4308::getParameter<double>(this, "initial_z", 0.05).as_double();
+        this->plan_idx = 0;
 
         // topics
         this->sub_est_pose_ = this->create_subscription<nav_msgs::msg::Odometry>("odom", rclcpp::SensorDataQoS(),
@@ -55,6 +56,7 @@ namespace ee4308::drone
     void Behavior::callbackSubTurtlePlan_(nav_msgs::msg::Path::SharedPtr msg)
     {
         this->turtle_plan_ = *msg;
+        this->plan_idx = 0;
     }
 
     void Behavior::callbackTimer_()
@@ -96,11 +98,8 @@ namespace ee4308::drone
                     break;
 
                 case TURTLE_WAYPOINT://3
-                    if(turtle_stop_){//if turtle has stopped --- then how? check if 3 states are reached?
-                        transition_(LANDING);
-                    } else {
-                        transition_(INITIAL);
-                    }
+                    transition_(INITIAL);
+
                     break;
                 case INITIAL: //4
                     if(turtle_stop_){ //if turtle has stopped and reached goal
@@ -144,6 +143,7 @@ namespace ee4308::drone
 
         // modify the following
         state_ = new_state;
+        geometry_msgs::msg::PoseStamped_ curr = turtle_plan_.poses.front(); //get node
 
         if (state_ == TAKEOFF)
         {
@@ -158,12 +158,20 @@ namespace ee4308::drone
 
             
         } else if (state_ == TURTLE_WAYPOINT){
-            //check if its at the goal yet
-            geometry_msgs::msg::PoseStamped_ goal = turtle_plan_.poses.back();
-            if(goal.pose.position.x == odom_.pose.pose.position.x && goal.pose.position.y == odom_.pose.pose.position.y && goal.pose.position.z == odom_.pose.pose.position.z){
-                turtle_stop_ = true;
+            // Check if we still have points left in the plan to visit
+            if (plan_idx < turtle_plan_.poses.size()) {
+                auto next_pose = turtle_plan_.poses[plan_idx].pose.position;
+        
+                // Update the internal waypoints the controller uses
+                setWaypoint_(next_pose.x, next_pose.y, next_pose.z);
+        
+                // Prepare index for the NEXT time we transition into this state
+                plan_idx++; 
             } else {
-                //go to current waypoint ??
+                // No more waypoints left in this plan
+                plan_idx = 0; // Reset for future plans
+                //transition_(INITIAL); 
+                turtle_stop_ = true;
             }
             
         }else if (state_ == LANDING){
@@ -197,9 +205,12 @@ namespace ee4308::drone
         // =========
         
         // remove or rewrite the following
-        (void) waypoint_x; // remove or .
-        (void) waypoint_y; // write to private class property.
-        (void) waypoint_z; // write to private class property.
+        //(void) waypoint_x; // remove or .
+        //(void) waypoint_y; // write to private class property.
+        //(void) waypoint_z; // write to private class property.
+        this->waypoint_x_ = waypoint_x;
+        this->waypoint_y_ = waypoint_y;
+        this->waypoint_z_ = waypoint_z;
     }
 
     bool Behavior::reachedWaypoint_()
