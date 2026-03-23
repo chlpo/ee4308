@@ -147,14 +147,21 @@ namespace ee4308::drone
         // .transpose()
         // =========
         Ysonar_ = msg.ranges[0];
-        //validation check
-        if (!std::isfinite(Ysonar_)) return;
+
+        RCLCPP_INFO_STREAM(this->get_logger(),
+        "[SONAR] Raw measurement Ysonar_=" << Ysonar_);
+
+        if (!std::isfinite(Ysonar_)) {
+        RCLCPP_WARN_STREAM(this->get_logger(),
+            "[SONAR] Measurement is invalid. Skipping KF correction.");
+        return;}
+        
 
         
-        Eigen::Vector2d H_z_T; //this is 2x1
-        H_z_T << 1.0,0.0;
-        Eigen::Vector2d H_z;
-        H_z << H_z_T.transpose();
+        Eigen::RowVector2d H_z; //this is1x2
+        H_z << 1.0,0.0;//this is 2x1
+        Eigen::Vector2d H_z_T;
+        H_z_T << H_z.transpose();
         double V_k_z = 1.0; //cannot add float to matrix
         double R_k_z = var_sonar_;
         Eigen::Vector2d K_z;
@@ -166,11 +173,21 @@ namespace ee4308::drone
         //innovation term
         double innovation = Ysonar_ - (H_z*Xz_).value();
         Eigen::Matrix2d P_k_z;
-        P_k_z << Pz_ - K_z*H_z*Pz_;
+        //P_k_z << Pz_ - K_z*H_z*Pz_;
+
+        RCLCPP_INFO_STREAM(this->get_logger(),
+        "[SONAR] Predicted z=" << Xz_(0)
+        << ", innovation=" << innovation
+        << ", S=" << S
+        << ", K=[" << K_z(0) << ", " << K_z(1) << "]");
 
         //update
-        Pz_ = P_k_z;
+        //Pz_ = P_k_z;
+        Pz_ = (Eigen::Matrix2d::Identity() -K_z * H_z)*Pz_;
         Xz_ = Xz_ + K_z * innovation;
+
+        RCLCPP_INFO_STREAM(this->get_logger(),
+        "[SONAR] Corrected Xz_=[" << Xz_(0) << ", " << Xz_(1) << "]");
 
 
         // ==== [FOR LAB 2 ONLY] ==== 
@@ -180,12 +197,12 @@ namespace ee4308::drone
         Py_ << 0.1, 0, 0, 0.1;
         // =========
         
-        if (!std::isfinite(Ysonar_))
+        /*if (!std::isfinite(Ysonar_))
         { 
             // if out of range, write to Ysonar_, 
             //     but do not do the KF correction.
             return;
-        }
+        }*/
 
         // if in range, write to Ysonar_, and do the KF correction.
     }
@@ -276,8 +293,20 @@ namespace ee4308::drone
         float Q_z = var_imu_z_;
         Eigen::Matrix2d P_zkminus1;
         P_zkminus1 = F_zk*Pz_*F_zk.transpose()+ W_zk*Q_z*W_zk.transpose();
-        Xz_ = W_zk;
+
+        RCLCPP_INFO_STREAM(this->get_logger(),
+        "[IMU PREDICT] dt=" << dt
+        << ", imu_az=" << msg.linear_acceleration.z
+        << ", az_k=" << input);
+
+        RCLCPP_INFO_STREAM(this->get_logger(),
+        "[IMU PREDICT] Xz_prev=[" << XZPrev(0) << ", " << XZPrev(1) << "]"
+        << ", Xz_pred=[" << XZK(0) << ", " << XZK(1) << "]");
+
+        Xz_ = XZK;
         Pz_ = P_zkminus1;
+        RCLCPP_INFO_STREAM(this->get_logger(),
+        "[IMU PREDICT] Updated Xz_=[" << Xz_(0) << ", " << Xz_(1) << "]");
         (void) msg;
 
         RCLCPP_INFO_THROTTLE(this->get_logger(), *this->get_clock(), 1000, "Pos: [%.2f, %.2f, %.2f] Yaw: %.2f", Xx_(0), Xy_(0), Xz_(0), Xa_(0));
